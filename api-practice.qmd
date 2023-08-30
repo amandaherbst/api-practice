@@ -1,0 +1,108 @@
+---
+title: "EDS 214 API Practice"
+format: html
+editor: visual
+---
+
+```{r}
+library(dataRetrieval)
+library(tidyverse)
+```
+
+## USGS Hydrological Data with dataRetrieval
+
+-   Using `dataRetrieval` get the the discharge (ft³/s) time-series for the Ventura River (site `11118500`) during the recent Hilary tropical storm from 2023-08-19 to 2023-08-22
+
+```{r}
+# from dataRetrieval CRAN
+siteNumber <- "11118500"
+parameterCd <- "00060" # Discharge
+startDate <- "2023-08-19"
+endDate <- "2023-08-22"
+
+discharge <- readNWISdv(siteNumber, parameterCd, startDate, endDate)
+```
+
+-   Plot the time-series using `ggplot2`
+
+```{r}
+ggplot(data = discharge, aes(x = Date, y = X_00060_00003)) +
+  geom_line() +
+  geom_point() +
+  labs(x = "", 
+       y = "Discharge (ft^3 / s)", 
+       title = "Ventura River Discharge during Hurricane Hilary")
+```
+
+-   What was the maximum discharge during this period of time?
+
+```{r}
+max_discharge <- max(discharge$X_00060_00003)
+
+max_discharge
+```
+
+## metajam
+
+-   `metajam::download_d1_data`\
+    download a specific dataset to your computer using a folder based file structure grouping data and metadata
+
+-   `metajam::read_d1_files`\
+    read this data structure to load both data and associated metadata into R using a named list data structure
+
+Let\'s determine what percentage of Alaskan household are speaking only English!
+
+-   download the data `household_language.csv` using `metajam`
+
+```{r}
+# # set inputs
+# data_obj <- "https://arcticdata.io/metacat/d1/mn/v2/object/urn%3Auuid%3A9e123f84-ce0d-4094-b898-c9e73680eafa"
+# path <- "~/Desktop"
+# # download data and metadata
+# library(metajam)
+# download_d1_data(data_obj, path)
+# # Returned
+# #[1] "~/Desktop/doi_10.18739_A2DP3X__Alaska_Schools_Rentention2009_15"
+```
+
+```{r}
+library(metajam)
+
+data_obj <- "https://knb.ecoinformatics.org/knb/d1/mn/v2/object/urn%3Auuid%3A7fc6f6db-c5ea-426a-a743-1f2edafb43b8"
+path <- "/Users/aherbst/github/EDS214/api-practice" # or just put "." because that means "here"
+
+download_d1_data(data_obj, path)
+```
+
+-   Read the data into R using `metajam`
+
+```{r}
+# example
+# my_data <- read_d1_files("~/Desktop/doi_10.18739_A2DP3X__Alaska_Schools_Rentention2009_15")
+```
+
+```{r}
+ak_household_data <- read_d1_files("doi_10.5063_F1N58JPP__household_language__csv/")
+```
+
+```{r}
+household_language <- ak_household_data$data
+```
+
+-   compute the percentage of Alaskan household speaking only English from 2009 to 2015
+
+```{r}
+percent_english <- household_language %>% 
+  filter(Year %in% seq(from = 2009, to = 2015, by = 1)) %>% 
+  select(Year, total, speak_only_english, city) %>% 
+  group_by(Year) %>% 
+  summarize(percent_english_only = sum(speak_only_english) / sum(total),
+            total_ppl = sum(total))
+```
+
+-   Create a plot to visualize this data
+
+```{r}
+ggplot(data = percent_english, aes(x = Year, y = percent_english_only)) +
+  geom_col()
+```
