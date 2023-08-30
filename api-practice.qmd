@@ -50,7 +50,7 @@ max_discharge
 -   `metajam::read_d1_files`\
     read this data structure to load both data and associated metadata into R using a named list data structure
 
-Let\'s determine what percentage of Alaskan household are speaking only English!
+Let's determine what percentage of Alaskan household are speaking only English!
 
 -   download the data `household_language.csv` using `metajam`
 
